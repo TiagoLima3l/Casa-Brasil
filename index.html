@@ -1006,12 +1006,13 @@ button, input, select, textarea,
         <div class="cfg-step"><div class="cfg-n">1</div><div class="cfg-t">Acesse <strong>script.google.com</strong>, crie um novo projeto e cole o código do Apps Script exibido abaixo.</div></div>
         <div class="cfg-step"><div class="cfg-n">2</div><div class="cfg-t">Clique em <strong>Implantar → Nova implantação → Aplicativo da Web</strong>. Execute como: sua conta. Acesso: "Qualquer pessoa".</div></div>
         <div class="cfg-step"><div class="cfg-n">3</div><div class="cfg-t">Copie a URL gerada e cole no campo abaixo. Pronto — cada cadastro irá automaticamente para sua planilha.</div></div>
-        <div class="f-group" style="margin-top:1rem"><label class="f-label">URL do Google Apps Script</label><input type="url" class="f-input" id="sheets-url" placeholder="https://script.google.com/macros/s/..."></div>
+        <div class="f-group" style="margin-top:1rem"><label class="f-label">URL do Script — Imóveis (cadastro interno)</label><input type="url" class="f-input" id="sheets-url" placeholder="https://script.google.com/macros/s/..."></div>
+        <div class="f-group" style="margin-top:.6rem"><label class="f-label">URL do Script — Leads (formulário do site)</label><input type="url" class="f-input" id="leads-url" placeholder="https://script.google.com/macros/s/..."><span class="f-hint">Recebe os dados de quem preenche o formulário de contato</span></div>
         <div class="f-group" style="margin-top:.5rem"><label class="f-label">Senha do sistema</label><input type="password" class="f-input" id="sys-pwd-cfg" placeholder="Nova senha (mín. 4 caracteres)"><span class="f-hint">Deixe em branco para manter a senha atual</span></div>
         <button class="btn-sv" style="margin-top:.75rem" onclick="saveConfig()">Salvar Configurações</button>
       </div>
       <div class="cfg-card">
-        <h3>📄 Código Google Apps Script</h3>
+        <h3>📄 Código Apps Script — Imóveis</h3>
         <p>Crie um novo projeto em script.google.com, cole o código abaixo e implante como Web App.</p>
         <textarea style="width:100%;min-height:240px;font-family:monospace;font-size:.74rem;background:#F5F5F5;border:1px solid var(--green-light);padding:.75rem;resize:vertical;border-radius:0" readonly>// Casa Brasil Imóveis — Web App para Google Sheets
 const SHEET_ID = 'COLE_AQUI_O_ID_DA_SUA_PLANILHA';
@@ -1045,6 +1046,33 @@ function doPost(e) {
   }
 }
 function doGet(){return ContentService.createTextOutput('Casa Brasil — OK').setMimeType(ContentService.MimeType.TEXT);}</textarea>
+      </div>
+
+      <div class="cfg-card">
+        <h3>📋 Código Apps Script — Leads (formulário do site)</h3>
+        <p>Crie um <strong>segundo projeto separado</strong> em script.google.com para receber os leads do formulário de contato. Cole o código abaixo e implante como Web App.</p>
+        <textarea style="width:100%;min-height:200px;font-family:monospace;font-size:.74rem;background:#F5F5F5;border:1px solid var(--green-light);padding:.75rem;resize:vertical;border-radius:0" readonly>// Casa Brasil Imóveis — Leads do Site
+const SHEET_ID_LEADS = 'COLE_AQUI_O_ID_DA_SUA_PLANILHA';
+
+function doPost(e) {
+  try {
+    const data  = JSON.parse(e.postData.contents);
+    const ss    = SpreadsheetApp.openById(SHEET_ID_LEADS);
+    let sheet   = ss.getSheetByName('Leads');
+    if (!sheet) {
+      sheet = ss.insertSheet('Leads');
+      sheet.appendRow(['Data','Nome','WhatsApp','E-mail','Interesse','Imóvel Ref.','Mensagem']);
+    }
+    sheet.appendRow([data.data, data.nome, data.tel, data.email,
+                     data.interesse, data.imovelRef, data.mensagem]);
+    return ContentService.createTextOutput(
+      JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(
+      JSON.stringify({status:'error',msg:err.message})).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+function doGet(){return ContentService.createTextOutput('Casa Brasil Leads — OK').setMimeType(ContentService.MimeType.TEXT);}</textarea>
       </div>
     </div>
   </div>
@@ -1113,8 +1141,10 @@ function openSistema() {
   renderPainel();
   sysView('painel');
   // Load config
-  const u = localStorage.getItem('cb_sheets_url');
-  if (u) document.getElementById('sheets-url').value = u;
+  const u  = localStorage.getItem('cb_sheets_url');
+  const lu = localStorage.getItem('cb_leads_url');
+  if (u)  document.getElementById('sheets-url').value = u;
+  if (lu) document.getElementById('leads-url').value  = lu;
 }
 
 // ── Rota por hash para deep-link do link de complementação
@@ -1578,23 +1608,46 @@ function enviarForm() {
   const interesse=document.getElementById('c-interesse').value;
   const imovelRef=document.getElementById('c-imovelRef').value;
   const mensagem =document.getElementById('c-mensagem').value;
+  const email   =document.getElementById('c-email').value.trim();
+
+  // Enviar para Google Sheets
+  sendLeadSheets({ nome, tel, email, interesse, imovelRef, mensagem });
+
+  // Abrir WhatsApp
   let msg=`Olá Tiago! Meu nome é *${nome}*.\n`;
   if(interesse) msg+=`Interesse: ${interesse}\n`;
   if(imovelRef) msg+=`Imóvel: ${imovelRef}\n`;
   if(mensagem)  msg+=`\n${mensagem}`;
-  const wpp=`https://wa.me/5567900000000?text=${encodeURIComponent(msg)}`;
+  const wpp=`https://wa.me/5567991406848?text=${encodeURIComponent(msg)}`;
   document.getElementById('formContent').style.display='none';
   document.getElementById('formSuccess').style.display='block';
   setTimeout(()=>window.open(wpp,'_blank'),500);
+}
+
+function sendLeadSheets(d) {
+  const url = localStorage.getItem('cb_leads_url');
+  if (!url) return;
+  const payload = {
+    data: new Date().toLocaleString('pt-BR'),
+    nome: d.nome,
+    tel:  d.tel,
+    email: d.email || '',
+    interesse: d.interesse || '',
+    imovelRef: d.imovelRef || '',
+    mensagem:  d.mensagem || ''
+  };
+  fetch(url, { method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'text/plain'} }).catch(()=>{});
 }
 
 // ══════════════════════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════════════════════
 function saveConfig() {
-  const url=document.getElementById('sheets-url').value.trim();
-  const pwd=document.getElementById('sys-pwd-cfg').value.trim();
-  if(url) localStorage.setItem('cb_sheets_url',url);
+  const url     = document.getElementById('sheets-url').value.trim();
+  const leadsUrl= document.getElementById('leads-url').value.trim();
+  const pwd     = document.getElementById('sys-pwd-cfg').value.trim();
+  if(url)      localStorage.setItem('cb_sheets_url', url);
+  if(leadsUrl) localStorage.setItem('cb_leads_url',  leadsUrl);
   if(pwd&&pwd.length>=4) { localStorage.setItem('cb_pwd',pwd); sessionStorage.setItem('cb_auth','ok'); }
   showToast('✓  Configurações salvas!');
 }
