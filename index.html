@@ -502,6 +502,35 @@ body { font-family: 'Calibri', 'Helvetica Neue', Helvetica, Arial, sans-serif; c
   border-radius: var(--radius-sm);
 }
 
+/* ── Módulo de Leads ── */
+#sv-leads { display:none; }
+#sv-leads.active { display:flex; gap:0; min-height:calc(100vh - 54px); }
+#leads-painel-wrap { flex:1; min-width:0; padding-bottom:3rem; }
+.lead-editor {
+  width:420px; min-width:320px; background:var(--white);
+  border-left:3px solid var(--green-light);
+  padding:1.4rem 1.2rem 3rem;
+  overflow-y:auto; max-height:calc(100vh - 54px);
+  position:sticky; top:54px;
+}
+.lead-editor-header {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  margin-bottom:1.2rem; gap:1rem;
+}
+.lead-editor .f-actions { margin-top:1.4rem; padding-top:1rem; border-top:1px solid var(--green-light); }
+.lead-badge { font-family:'Cinzel',serif; font-size:.58rem; font-weight:600;
+  letter-spacing:.12em; text-transform:uppercase; padding:.2rem .6rem; }
+.lead-badge.Novo        { background:#EBF1F8; color:var(--green); }
+.lead-badge.Ativo       { background:#e8f8e8; color:#2d7a2d; }
+.lead-badge.negociacao  { background:#FEF9C3; color:#92400E; }
+.lead-badge.Convertido  { background:#fef3c7; color:#b45309; }
+.lead-badge.Inativo     { background:#f3f4f6; color:#6b7280; }
+.lead-origem { font-size:.72rem; color:var(--gray-label); margin-top:.1rem; }
+@media(max-width:860px){
+  #sv-leads.active { flex-direction:column; }
+  .lead-editor { width:100%; max-height:none; position:static; border-left:none; border-top:3px solid var(--green-light); }
+}
+
 /* ── Fonte global: Calibri / Helvetica ── */
 button, input, select, textarea,
 .nav-links a, .nav-cta, .hero-title, .hero-creci, .hero-desc,
@@ -827,8 +856,9 @@ button, input, select, textarea,
       <span>Sistema de Gestão</span>
     </button>
     <div class="sys-nav">
-      <button class="sys-btn active" id="sbtn-painel" onclick="sysView('painel')">📋 Painel</button>
-      <button class="sys-btn" id="sbtn-form" onclick="sysView('form'); novoImovel()">➕ Novo Imóvel</button>
+      <button class="sys-btn active" id="sbtn-painel" onclick="sysView('painel')">🏠 Imóveis</button>
+      <button class="sys-btn" id="sbtn-leads" onclick="sysView('leads')">👥 Leads</button>
+      <button class="sys-btn" id="sbtn-form" onclick="sysView('form'); novoImovel()" style="display:none">➕ Novo Imóvel</button>
       <button class="sys-btn" id="sbtn-config" onclick="sysView('config')">⚙️ Config</button>
       <button class="sys-btn sys-exit" onclick="goPublic()">← Site</button>
     </div>
@@ -992,6 +1022,83 @@ button, input, select, textarea,
       <div id="lk-card" class="link-card" style="display:none">
         <div><div class="lk-label">🔗 Link para complementar depois</div><div class="lk-url" id="lk-url"></div></div>
         <button class="btn-copy" onclick="copyLink()">Copiar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS -->
+  <div class="sys-view" id="sv-leads">
+    <div class="painel" id="leads-painel-wrap">
+      <div class="painel-header">
+        <div><div class="painel-title">Leads & Clientes</div><div class="painel-sub">Contatos recebidos e pipeline de atendimento</div></div>
+        <button class="btn-novo" onclick="abrirNovoLead()">+ Novo Lead</button>
+      </div>
+      <div class="stats-row" id="lead-stats-row">
+        <div class="s-card draft"><div class="s-num" id="ln-novo">0</div><div class="s-lbl">🔵 Novos</div></div>
+        <div class="s-card mid"><div class="s-num" id="ln-ativo">0</div><div class="s-lbl">🟢 Ativos</div></div>
+        <div class="s-card done"><div class="s-num" id="ln-conv">0</div><div class="s-lbl">⭐ Convertidos</div></div>
+      </div>
+      <div class="fc-bar">
+        <button class="fc active" onclick="filterLeads('todos',this)">Todos</button>
+        <button class="fc" onclick="filterLeads('Novo',this)">🔵 Novo</button>
+        <button class="fc" onclick="filterLeads('Ativo',this)">🟢 Ativo</button>
+        <button class="fc" onclick="filterLeads('Em Negociação',this)">🟡 Em Negociação</button>
+        <button class="fc" onclick="filterLeads('Convertido',this)">⭐ Convertido</button>
+        <button class="fc" onclick="filterLeads('Inativo',this)">⚫ Inativo</button>
+      </div>
+      <div class="im-list" id="lead-list"></div>
+    </div>
+
+    <!-- Editor de lead (painel lateral) -->
+    <div class="lead-editor" id="lead-editor" style="display:none">
+      <div class="lead-editor-header">
+        <div>
+          <div class="painel-title" id="led-title">Novo Lead</div>
+          <div class="painel-sub" id="led-cod"></div>
+        </div>
+        <button class="form-back" onclick="fecharEditor()">✕ Fechar</button>
+      </div>
+      <div class="fg">
+        <div class="f-group"><label class="f-label">Nome Completo</label><input class="f-input" id="ld-nome" type="text" placeholder="Nome do cliente"></div>
+        <div class="f-group"><label class="f-label">Telefone / WhatsApp</label><input class="f-input" id="ld-tel" type="tel" placeholder="(67) 9 ____-____"></div>
+        <div class="f-group"><label class="f-label">E-mail</label><input class="f-input" id="ld-email" type="email" placeholder="email@exemplo.com"></div>
+        <div class="f-group"><label class="f-label">Origem</label>
+          <select class="f-select" id="ld-origem">
+            <option>Formulário Site</option><option>Indicação</option><option>Redes Sociais</option>
+            <option>OLX</option><option>ZAP Imóveis</option><option>Prospecção Ativa</option>
+            <option>Instagram</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="f-group"><label class="f-label">Status</label>
+          <select class="f-select" id="ld-status">
+            <option>Novo</option><option>Ativo</option><option>Em Negociação</option>
+            <option>Convertido</option><option>Inativo</option>
+          </select>
+        </div>
+        <div class="f-group"><label class="f-label">Tipo de Interesse</label>
+          <select class="f-select" id="ld-tipo">
+            <option value="">—</option><option>Compra</option><option>Venda</option>
+            <option>Locação</option><option>Compra e Venda</option>
+          </select>
+        </div>
+        <div class="f-group"><label class="f-label">Bairros Preferidos</label><input class="f-input" id="ld-bairros" type="text" placeholder="Ex: Centro, Bairro Alto"></div>
+        <div class="f-group"><label class="f-label">Faixa de Valor (R$)</label><input class="f-input" id="ld-faixa" type="text" placeholder="Ex: 200.000 - 350.000"></div>
+        <div class="f-group"><label class="f-label">Quartos Mínimos</label>
+          <select class="f-select" id="ld-quartos">
+            <option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5+</option>
+          </select>
+        </div>
+        <div class="f-group"><label class="f-label">Data 1º Contato</label><input class="f-input" id="ld-datap" type="date"></div>
+        <div class="f-group"><label class="f-label">Próximo Follow-up</label><input class="f-input" id="ld-followup" type="date"></div>
+        <div class="f-group"><label class="f-label">Imóvel Vinculado</label><input class="f-input" id="ld-imovel" type="text" placeholder="Cód. do imóvel (ex: IM001)"></div>
+        <div class="f-group sp2"><label class="f-label">Observações</label><textarea class="f-textarea" id="ld-obs" placeholder="Preferências, anotações, histórico..."></textarea></div>
+      </div>
+      <div class="f-actions">
+        <button class="btn-sv sec" onclick="fecharEditor()">Cancelar</button>
+        <div style="display:flex;gap:.6rem">
+          <button class="btn-sv sec" onclick="excluirLead()" style="border-color:var(--danger);color:var(--danger)" id="btn-excluir-lead">Excluir</button>
+          <button class="btn-sv" onclick="salvarLead()">Salvar Lead</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1172,7 +1279,10 @@ function sysView(name) {
   document.getElementById('sv-'+name).classList.add('active');
   const btn = document.getElementById('sbtn-'+name);
   if (btn) btn.classList.add('active');
+  // Botão "Novo Imóvel" só aparece na view de imóveis
+  document.getElementById('sbtn-form').style.display = (name === 'painel') ? '' : 'none';
   if (name === 'painel') renderPainel();
+  if (name === 'leads')  { renderLeads(); fecharEditor(); }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1610,7 +1720,8 @@ function enviarForm() {
   const mensagem =document.getElementById('c-mensagem').value;
   const email   =document.getElementById('c-email').value.trim();
 
-  // Enviar para Google Sheets
+  // Salvar lead no sistema interno + enviar para Google Sheets
+  criarLeadDoFormulario({ nome, tel, email, interesse, imovelRef, mensagem });
   sendLeadSheets({ nome, tel, email, interesse, imovelRef, mensagem });
 
   // Abrir WhatsApp
@@ -1637,6 +1748,174 @@ function sendLeadSheets(d) {
     mensagem:  d.mensagem || ''
   };
   fetch(url, { method:'POST', mode:'no-cors', body:JSON.stringify(payload), headers:{'Content-Type':'text/plain'} }).catch(()=>{});
+}
+
+// ══════════════════════════════════════════════════════
+// LEADS
+// ══════════════════════════════════════════════════════
+let leads       = JSON.parse(localStorage.getItem('cb_leads') || '[]');
+let leadFilter  = 'todos';
+let editingLead = null;
+
+function gerarCodLead() {
+  const num = leads.length + 1;
+  return 'LD' + String(num).padStart(3, '0');
+}
+
+function persistLeads() { localStorage.setItem('cb_leads', JSON.stringify(leads)); }
+
+function renderLeads() {
+  const list = document.getElementById('lead-list');
+  const fil  = leadFilter === 'todos' ? leads : leads.filter(l => l.status === leadFilter);
+
+  document.getElementById('ln-novo').textContent  = leads.filter(l => l.status === 'Novo').length;
+  document.getElementById('ln-ativo').textContent  = leads.filter(l => l.status === 'Ativo').length;
+  document.getElementById('ln-conv').textContent   = leads.filter(l => l.status === 'Convertido').length;
+
+  if (!fil.length) {
+    list.innerHTML = `<div class="empty-st"><div class="empty-st-icon">👥</div>
+      <div>${leadFilter === 'todos' ? 'Nenhum lead cadastrado ainda.' : 'Nenhum lead nesta categoria.'}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = [...fil].reverse().map(l => {
+    const badgeClass = {
+      'Novo':'Novo','Ativo':'Ativo','Em Negociação':'negociacao',
+      'Convertido':'Convertido','Inativo':'Inativo'
+    }[l.status] || 'Novo';
+
+    const detalhe = [
+      l.tipo   ? l.tipo : '',
+      l.bairros ? l.bairros : '',
+      l.faixa  ? 'R$ ' + l.faixa : '',
+    ].filter(Boolean).join(' · ');
+
+    const followupStr = l.followup
+      ? `<span style="color:var(--gold);font-weight:600">📅 Follow-up: ${l.followup}</span>` : '';
+    const imovelStr = l.imovelVinc ? `🏠 ${l.imovelVinc}` : '';
+
+    return `<div class="im-item" onclick="abrirEditor('${l.cod}')">
+      <div>
+        <div class="im-cod">${l.cod} <span class="lead-origem">${l.origem || ''}</span></div>
+        <div class="im-end">${l.nome || '—'}</div>
+        <div class="im-meta">
+          ${l.tel  ? `<span>📱 ${l.tel}</span>` : ''}
+          ${l.email ? `<span>✉️ ${l.email}</span>` : ''}
+        </div>
+        ${detalhe ? `<div class="im-meta" style="margin-top:.2rem">${detalhe}</div>` : ''}
+        <div class="im-meta" style="margin-top:.25rem;gap:1rem">
+          ${followupStr}${imovelStr ? `<span>${imovelStr}</span>` : ''}
+        </div>
+      </div>
+      <div class="s-badge lead-badge ${badgeClass}">${l.status}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterLeads(f, btn) {
+  leadFilter = f;
+  document.querySelectorAll('#sv-leads .fc').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLeads();
+}
+
+function abrirNovoLead() {
+  editingLead = null;
+  document.getElementById('led-title').textContent = 'Novo Lead';
+  document.getElementById('led-cod').textContent   = '';
+  document.getElementById('btn-excluir-lead').style.display = 'none';
+  ['ld-nome','ld-tel','ld-email','ld-bairros','ld-faixa','ld-imovel','ld-obs'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('ld-origem').value  = 'Formulário Site';
+  document.getElementById('ld-status').value  = 'Novo';
+  document.getElementById('ld-tipo').value    = '';
+  document.getElementById('ld-quartos').value = '';
+  document.getElementById('ld-datap').value   = new Date().toISOString().split('T')[0];
+  document.getElementById('ld-followup').value = '';
+  document.getElementById('lead-editor').style.display = '';
+  document.getElementById('ld-nome').focus();
+}
+
+function abrirEditor(cod) {
+  const l = leads.find(x => x.cod === cod);
+  if (!l) return;
+  editingLead = cod;
+  document.getElementById('led-title').textContent = l.nome || 'Lead';
+  document.getElementById('led-cod').textContent   = l.cod;
+  document.getElementById('btn-excluir-lead').style.display = '';
+  const set = (id, val) => { const e = document.getElementById(id); if (e) e.value = val || ''; };
+  set('ld-nome', l.nome); set('ld-tel', l.tel); set('ld-email', l.email);
+  set('ld-origem', l.origem); set('ld-status', l.status); set('ld-tipo', l.tipo);
+  set('ld-bairros', l.bairros); set('ld-faixa', l.faixa); set('ld-quartos', l.quartos);
+  set('ld-datap', l.dataPrimeiro); set('ld-followup', l.followup);
+  set('ld-imovel', l.imovelVinc); set('ld-obs', l.obs);
+  document.getElementById('lead-editor').style.display = '';
+  document.getElementById('ld-nome').focus();
+}
+
+function fecharEditor() {
+  document.getElementById('lead-editor').style.display = 'none';
+  editingLead = null;
+}
+
+function coletarLead() {
+  const g = id => (document.getElementById(id) || {}).value?.trim() || '';
+  return {
+    nome: g('ld-nome'), tel: g('ld-tel'), email: g('ld-email'),
+    origem: g('ld-origem'), status: g('ld-status'), tipo: g('ld-tipo'),
+    bairros: g('ld-bairros'), faixa: g('ld-faixa'), quartos: g('ld-quartos'),
+    dataPrimeiro: g('ld-datap'), followup: g('ld-followup'),
+    imovelVinc: g('ld-imovel'), obs: g('ld-obs'),
+  };
+}
+
+function salvarLead() {
+  const d = coletarLead();
+  if (!d.nome && !d.tel) { showToast('⚠  Informe ao menos nome ou telefone.'); return; }
+  if (editingLead) {
+    const i = leads.findIndex(x => x.cod === editingLead);
+    if (i !== -1) { d.cod = editingLead; leads[i] = d; }
+  } else {
+    d.cod = gerarCodLead();
+    leads.push(d);
+    sendLeadSheets(d);
+  }
+  persistLeads();
+  renderLeads();
+  document.getElementById('led-title').textContent = d.nome || 'Lead';
+  document.getElementById('led-cod').textContent   = d.cod || '';
+  document.getElementById('btn-excluir-lead').style.display = '';
+  editingLead = d.cod;
+  showToast('✓  Lead ' + d.cod + ' salvo!');
+}
+
+function excluirLead() {
+  if (!editingLead) return;
+  if (!confirm('Excluir este lead?')) return;
+  leads = leads.filter(x => x.cod !== editingLead);
+  persistLeads();
+  fecharEditor();
+  renderLeads();
+  showToast('✓  Lead removido.');
+}
+
+// Quando form público cria lead automaticamente no sistema
+function criarLeadDoFormulario(d) {
+  const cod = gerarCodLead();
+  const lead = {
+    cod,
+    nome: d.nome, tel: d.tel, email: d.email,
+    origem: 'Formulário Site', status: 'Novo',
+    tipo: d.interesse && d.interesse.toLowerCase().includes('comprar') ? 'Compra'
+        : d.interesse && d.interesse.toLowerCase().includes('vender') ? 'Venda' : '',
+    bairros: '', faixa: '', quartos: '',
+    dataPrimeiro: new Date().toISOString().split('T')[0],
+    followup: '', imovelVinc: d.imovelRef || '',
+    obs: d.mensagem || '',
+  };
+  leads.push(lead);
+  persistLeads();
 }
 
 // ══════════════════════════════════════════════════════
