@@ -61,7 +61,7 @@ body { font-family: 'Lato', sans-serif; color: var(--gray-text); overflow-x: hid
 
 /* --- Hero --- */
 #hero { min-height:100vh; background:var(--green); display:grid; grid-template-columns:1fr 1fr; align-items:center; position:relative; overflow:hidden; }
-.hero-bg-pattern { position:absolute; inset:0; pointer-events:none; background-image:linear-gradient(135deg,rgba(255,255,255,.03) 25%,transparent 25%),linear-gradient(225deg,rgba(255,255,255,.03) 25%,transparent 25%),linear-gradient(315deg,rgba(255,255,255,.03) 25%,transparent 25%),linear-gradient(45deg,rgba(255,255,255,.03) 25%,transparent 25%); background-size:60px 60px; }
+.hero-bg-pattern { display:none; }
 .hero-accent-bar { position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--gold); }
 .hero-left { padding:120px 6vw 80px 8vw; position:relative; z-index:2; }
 .hero-tag { display:inline-block; font-family:'Montserrat',sans-serif; font-size:.7rem; font-weight:500; letter-spacing:.22em; text-transform:uppercase; color:var(--green-light); border-left:2px solid var(--gold); padding-left:.8rem; margin-bottom:2rem; opacity:0; animation:fadeUp .8s .2s forwards; }
@@ -333,6 +333,174 @@ body { font-family: 'Lato', sans-serif; color: var(--gray-text); overflow-x: hid
   .sp2{grid-column:span 1}
   .stats-row{grid-template-columns:1fr}
 }
+
+/* ══════════════════════════════════════════════════════
+   MELHORIAS — Padrões do Claude Cookbooks
+══════════════════════════════════════════════════════ */
+
+/* Tokens extras */
+:root {
+  --shadow-xs: 0 2px 6px rgba(4,114,88,.06);
+  --shadow-sm: 0 4px 12px rgba(4,114,88,.10);
+  --shadow-md: 0 8px 24px rgba(4,114,88,.14);
+  --shadow-lg: 0 18px 44px rgba(4,114,88,.17);
+  --radius-sm: 3px;
+}
+
+/* ── Scrollbar minimalista ── */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:var(--gray-bg); }
+::-webkit-scrollbar-thumb { background:var(--green-light); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--green); }
+
+/* ── Hero: barra de stats com acento gold ── */
+.hero-stats {
+  border-top: 2px solid rgba(201,168,76,.6);
+  border-radius: var(--radius-sm);
+}
+.stat + .stat {
+  border-left: 1px solid rgba(255,255,255,.13);
+  padding-left: 2.5rem;
+}
+
+/* ── Hero: placeholder de foto mais elegante ── */
+.hero-photo-placeholder {
+  background: linear-gradient(160deg, #023d2e 0%, var(--green-dark) 45%, var(--green) 100%);
+}
+.photo-frame {
+  border-color: rgba(201,168,76,.38);
+  box-shadow: 0 0 48px rgba(201,168,76,.08), inset 0 0 32px rgba(255,255,255,.02);
+}
+
+/* ── Cards de imóveis: gradient border ao hover (técnica cookbooks) ── */
+.imovel-card {
+  position: relative;
+  border: 1.5px solid #e0ece7;
+  box-shadow: var(--shadow-xs);
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+}
+.imovel-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--white), var(--white)) padding-box,
+    linear-gradient(135deg, var(--green), var(--gold)) border-box;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .35s;
+  z-index: 5;
+}
+.imovel-card:hover {
+  transform: translateY(-7px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+.imovel-card:hover::after { opacity:1; }
+
+/* Vinheta sutil na imagem */
+.imovel-img::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 55%;
+  background: linear-gradient(to top, rgba(3,90,69,.22) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+.imovel-badge { z-index:2; border-radius:var(--radius-sm); }
+
+/* ── Seção Sobre ── */
+.sobre-card-main {
+  border-top: 3px solid var(--gold);
+  box-shadow: var(--shadow-md);
+}
+.diferencial {
+  box-shadow: var(--shadow-xs);
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+.diferencial:hover {
+  box-shadow: var(--shadow-sm);
+  transform: translateX(3px);
+}
+.valor-tag {
+  border-radius: var(--radius-sm);
+  transition: background .2s, border-color .2s, color .2s;
+}
+.valor-tag:hover {
+  background: var(--green-ghost);
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ── Filtros ── */
+.filter-btn { border-radius:var(--radius-sm); }
+
+/* ── Contato: acento gold na borda esquerda ── */
+.contato-info {
+  border-left: 3px solid rgba(201,168,76,.45);
+  transition: background .2s, border-left-color .2s;
+}
+.contato-info:hover {
+  background: rgba(255,255,255,.1);
+  border-left-color: rgba(201,168,76,.8);
+}
+
+/* ── Footer ── */
+#public-footer {
+  box-shadow: inset 0 4px 14px rgba(0,0,0,.1);
+}
+
+/* ── Sistema: stat cards mais proeminentes ── */
+.s-card {
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow .2s, transform .2s;
+}
+.s-card:hover { box-shadow:var(--shadow-sm); transform:translateY(-2px); }
+.s-num { font-size:2rem; }
+
+/* ── Sistema: lista de imóveis ── */
+.im-item {
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow .25s, transform .25s;
+}
+.im-item:hover { box-shadow:var(--shadow-sm); transform:translateX(3px); }
+
+/* ── Sistema: progress steps ── */
+.progress-steps { border-radius:var(--radius-sm); overflow:hidden; }
+
+/* ── Config: código com tema escuro (estilo cookbooks) ── */
+.cfg-card {
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow .2s;
+}
+.cfg-card:hover { box-shadow:var(--shadow-sm); }
+.cfg-card textarea[readonly] {
+  background: #15241e !important;
+  color: #9fd5c0 !important;
+  border-color: transparent !important;
+  font-size: .72rem !important;
+  line-height: 1.65 !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+/* ── Lock screen ── */
+.lock-box {
+  border-radius: 4px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+}
+
+/* ── Toast com acento gold ── */
+.toast {
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--gold);
+}
+
+/* ── Botões com radius sutil ── */
+.nav-cta,.btn-novo,.btn-sv,.form-submit,.btn-pub,.btn-lock,.lock-btn {
+  border-radius: var(--radius-sm);
+}
 </style>
 </head>
 <body>
@@ -483,7 +651,11 @@ body { font-family: 'Lato', sans-serif; color: var(--gray-text); overflow-x: hid
     <div class="footer-info">Três Lagoas / MS<br><a href="/cdn-cgi/l/email-protection#295d40484e46694a485a484b5b485a40454044465f4c405a074a4644074b5b"><span class="__cf_email__" data-cfemail="b7c3ded6d0d8f7d4d6c4d6d5c5d6c4dedbdedad8c1d2dec499d4d8da99d5c5">[email&#160;protected]</span></a></div>
   </footer>
 
-  <a class="wpp-float" href="https://wa.me/5567991406848" target="_blank">💬</a>
+  <a class="wpp-float" href="https://wa.me/5567991406848" target="_blank" aria-label="WhatsApp">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="28" height="28" fill="#fff">
+      <path d="M16 .5C7.44.5.5 7.44.5 16c0 2.75.71 5.37 2.06 7.68L.5 31.5l8.06-2.06A15.45 15.45 0 0 0 16 31.5C24.56 31.5 31.5 24.56 31.5 16S24.56.5 16 .5zm0 28.3a13.24 13.24 0 0 1-6.73-1.83l-.48-.29-4.98 1.27 1.3-4.84-.32-.5A13.26 13.26 0 1 1 16 28.8zm7.27-9.93c-.4-.2-2.35-1.16-2.72-1.29-.36-.13-.63-.2-.89.2s-1.02 1.29-1.25 1.55c-.23.27-.46.3-.86.1a10.86 10.86 0 0 1-3.19-1.97 11.97 11.97 0 0 1-2.21-2.75c-.23-.4-.02-.61.17-.81.18-.18.4-.46.6-.69.2-.23.26-.4.4-.66.13-.27.07-.5-.03-.7-.1-.2-.9-2.16-1.23-2.96-.32-.78-.65-.67-.89-.68h-.76c-.26 0-.69.1-1.05.5-.36.4-1.38 1.35-1.38 3.3s1.41 3.82 1.61 4.08c.2.27 2.78 4.24 6.73 5.95.94.4 1.67.65 2.24.83.94.3 1.8.26 2.47.16.75-.11 2.32-.95 2.65-1.87.33-.92.33-1.7.23-1.87-.1-.17-.36-.27-.76-.47z"/>
+    </svg>
+  </a>
 </div>
 
 <!-- ════════════════════════════════════════════════════
